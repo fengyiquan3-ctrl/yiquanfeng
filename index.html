@@ -451,16 +451,19 @@ renderLocation();
   const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   async function typeHomepageOnce(){
     const hero=document.querySelector('.hero-personal');
-    if(!hero||document.querySelector('.about-page')||window.portfolioLocale?.chinese)return;
+    if(!hero||document.querySelector('.about-page'))return;
+    const chinese=window.portfolioLocale?.chinese;
+    const greeting=chinese?'你好，我是 ':'Hi, I’m ';
+    const typingKey=chinese?'portfolioIntroTypedZh':'portfolioIntroTyped';
     const heading=hero.querySelector('h1');if(!heading||heading.dataset.typeReady)return;heading.dataset.typeReady='true';
-    const finalMarkup='Hi, I’m <span class="name-shuffle" aria-live="polite"><span class="name-current">Yiquan</span><span class="name-next">Bella</span></span> Feng.';
-    if(sessionStorage.getItem('portfolioIntroTyped')){heading.innerHTML=finalMarkup;heading.classList.add('typing-active');return}
+    const finalMarkup=greeting+'<span class="name-shuffle" aria-live="polite"><span class="name-current">Yiquan</span><span class="name-next">Bella</span></span> Feng.';
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches||sessionStorage.getItem(typingKey)){heading.innerHTML=finalMarkup;heading.classList.add('typing-active');return}
     heading.innerHTML='';heading.classList.add('typing-active');
     const prefix=document.createElement('span');heading.append(prefix);
-    for(const char of 'Hi, I’m '){prefix.textContent+=char;await sleep(82)}
+    for(const char of greeting){prefix.textContent+=char;await sleep(82)}
     const name=document.createElement('span');name.className='name-shuffle';name.setAttribute('aria-live','polite');const current=document.createElement('span');current.className='name-current';const next=document.createElement('span');next.className='name-next';next.textContent='Bella';name.append(current,next);heading.append(name);
     for(const char of 'Yiquan'){current.textContent+=char;await sleep(105)}
-    for(const char of ' Feng.'){heading.append(char);await sleep(82)}sessionStorage.setItem('portfolioIntroTyped','true');
+    for(const char of ' Feng.'){heading.append(char);await sleep(82)}sessionStorage.setItem(typingKey,'true');
   }
   function normalizeMediaPages(){
     document.querySelectorAll('figcaption').forEach(caption=>caption.remove());
@@ -548,7 +551,7 @@ renderLocation();
 <script id="requested-restoration-interactions">
 (()=>{
   function startReliableShuffle(name){
-    if(!name||name.dataset.reliableShuffle==='true')return;
+    if(!name||name.dataset.reliableShuffle==='true'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
     const current=name.querySelector('.name-current'),next=name.querySelector('.name-next'),heading=name.closest('h1');
     if(!current||!next||!heading||!heading.textContent.includes('Feng.'))return;
     name.dataset.reliableShuffle='true';
@@ -564,7 +567,8 @@ renderLocation();
         name.classList.remove('clean-changing');
       },580);
     };
-    setTimeout(()=>{cycle();setInterval(cycle,2780)},1800);
+    function repeat(){if(!name.isConnected)return;cycle();setTimeout(repeat,2780)}
+    setTimeout(repeat,1800);
   }
   function restoreInteractions(){
     document.querySelectorAll('.hero-personal .name-shuffle,.about-heading .name-shuffle').forEach(name=>setTimeout(()=>startReliableShuffle(name),0));
